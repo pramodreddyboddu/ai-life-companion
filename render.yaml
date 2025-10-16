@@ -13,8 +13,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false           # set in Render dashboard
       - key: POSTGRES_HOST
-        fromService:
-          type: pserv
+        fromDatabase:
           name: ai-companion-db
           property: host
       - key: POSTGRES_PORT
@@ -44,8 +43,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: POSTGRES_HOST
-        fromService:
-          type: pserv
+        fromDatabase:
           name: ai-companion-db
           property: host
       - key: POSTGRES_PORT

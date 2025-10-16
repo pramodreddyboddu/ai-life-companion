@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-companion-api
     env: docker
-    plan: free
+    plan: starter
     region: oregon            # or frankfurt/singapore etc.
     autoDeploy: true
     healthCheckPath: /health
@@ -33,7 +33,7 @@ services:
   - type: worker
     name: ai-companion-worker
     env: docker
-    plan: free
+    plan: starter
     region: oregon
     autoDeploy: true
     dockerfilePath: api/Dockerfile.worker
@@ -62,12 +62,12 @@ services:
 
   - type: redis
     name: ai-companion-redis
-    plan: free
+    plan: starter
     ipAllowList: []
 
 databases:
   - name: ai-companion-db
-    plan: free
+    plan: starter
     databaseName: ai_companion
     user: dbuser
     ipAllowList: []           # private by default

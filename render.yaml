@@ -6,8 +6,7 @@ services:
     region: oregon            # or frankfurt/singapore etc.
     autoDeploy: true
     healthCheckPath: /health
-    buildCommand: docker build -t ai-companion-api -f infra/Dockerfile.api .
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: api/Dockerfile
     envVars:
       - key: APP_ENV
         value: production
@@ -23,7 +22,7 @@ services:
       - key: POSTGRES_DB
         value: ai_companion
       - key: POSTGRES_USER
-        value: postgres
+        value: dbuser
       - key: POSTGRES_PASSWORD
         sync: false           # set in Render dashboard
       - key: REDIS_URL
@@ -38,8 +37,7 @@ services:
     plan: starter
     region: oregon
     autoDeploy: true
-    buildCommand: docker build -t ai-companion-worker -f infra/Dockerfile.worker .
-    startCommand: poetry run celery -A app.celery_app worker --loglevel=info
+    dockerfilePath: api/Dockerfile.worker
     envVars:
       - key: APP_ENV
         value: production
@@ -55,7 +53,7 @@ services:
       - key: POSTGRES_DB
         value: ai_companion
       - key: POSTGRES_USER
-        value: postgres
+        value: dbuser
       - key: POSTGRES_PASSWORD
         sync: false
       - key: REDIS_URL
@@ -67,10 +65,11 @@ services:
   - type: redis
     name: ai-companion-redis
     plan: starter
+    ipAllowList: []
 
 databases:
   - name: ai-companion-db
     plan: starter             # pick plan in the UI if your account differs
     databaseName: ai_companion
-    user: postgres
+    user: dbuser
     ipAllowList: []           # private by default

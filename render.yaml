@@ -64,13 +64,13 @@ services:
           name: ai-companion-redis
           property: connectionString
 
+  - type: redis
+    name: ai-companion-redis
+    plan: starter
+
 databases:
   - name: ai-companion-db
     plan: starter             # pick plan in the UI if your account differs
     databaseName: ai_companion
     user: postgres
     ipAllowList: []           # private by default
-
-redis:
-  - name: ai-companion-redis
-    plan: starter

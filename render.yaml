@@ -13,8 +13,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false           # set in Render dashboard
       - key: APP_DATABASE__URL
-        fromService:
-          type: database
+        fromDatabase:
           name: ai-companion-db
           property: connectionString
       - key: REDIS_URL
@@ -36,8 +35,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       - key: APP_DATABASE__URL
-        fromService:
-          type: database
+        fromDatabase:
           name: ai-companion-db
           property: connectionString
       - key: REDIS_URL

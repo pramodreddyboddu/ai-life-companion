@@ -12,22 +12,11 @@ services:
         value: production
       - key: OPENAI_API_KEY
         sync: false           # set in Render dashboard
-      - key: POSTGRES_HOST
-        fromDatabase:
+      - key: APP_DATABASE__URL
+        fromService:
+          type: database
           name: ai-companion-db
-          property: host
-      - key: POSTGRES_PORT
-        value: 5432
-      - key: POSTGRES_DB
-        value: ai_companion
-      - key: POSTGRES_USER
-        fromDatabase:
-          name: ai-companion-db
-          property: user
-      - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: ai-companion-db
-          property: password
+          property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
@@ -46,22 +35,11 @@ services:
         value: production
       - key: OPENAI_API_KEY
         sync: false
-      - key: POSTGRES_HOST
-        fromDatabase:
+      - key: APP_DATABASE__URL
+        fromService:
+          type: database
           name: ai-companion-db
-          property: host
-      - key: POSTGRES_PORT
-        value: 5432
-      - key: POSTGRES_DB
-        value: ai_companion
-      - key: POSTGRES_USER
-        fromDatabase:
-          name: ai-companion-db
-          property: user
-      - key: POSTGRES_PASSWORD
-        fromDatabase:
-          name: ai-companion-db
-          property: password
+          property: connectionString
       - key: REDIS_URL
         fromService:
           type: redis
@@ -73,8 +51,4 @@ services:
     plan: starter
     ipAllowList: []
 
-databases:
-  - name: ai-companion-db
-    id: dpg-d3oj1pl6ubrc73afssl0
-    databaseName: ai_companion
-    ipAllowList: []           # private by default
+# Database managed outside the blueprint

@@ -1,0 +1,18 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitReturns": true,
+    "moduleResolution": "node",
+    "types": [
+      "expo",
+      "jest"
+    ]
+  },
+  "include": [
+    "app",
+    "lib",
+    "expo-env.d.ts",
+    "store"
+  ]
+}

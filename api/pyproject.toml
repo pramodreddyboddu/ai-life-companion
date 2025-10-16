@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "ai-companion-api"
+version = "0.1.0"
+description = "AI Life Companion API"
+authors = ["You <you@example.com>"]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = { version = "^0.30.0", extras = ["standard"] }
+pydantic = "^2.9.0"
+sqlalchemy = "^2.0.30"
+alembic = "^1.13.2"
+psycopg2-binary = "^2.9.9"
+pgvector = "^0.2.5"
+redis = "^5.0.7"
+celery = "^5.4.0"
+python-dotenv = "^1.0.1"
+httpx = "^0.28.1"
+openai = "^1.51.0"
+tenacity = "^9.0.0"
+passlib = { version = "^1.7.4", extras = ["bcrypt"] }
+pyjwt = "^2.9.0"
+pydantic-settings = "^2.4.0"
+loguru = "^0.7.2"
+stripe = ">=12,<14"
+cryptography = "^42.0.5"
+google-auth = "^2.30.0"
+google-auth-oauthlib = "^1.2.0"
+google-api-python-client = "^2.129.0"
+dateparser = "^1.2.0"
+python-multipart = "^0.0.20"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.6.9"
+
+[build-system]
+requires = ["poetry-core>=1.6.0"]
+build-backend = "poetry.core.masonry.api"

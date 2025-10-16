@@ -1,0 +1,24 @@
+{
+    "name": "ai-companion",
+    "dockerComposeFile": [
+        "../infra/compose.yaml"
+    ],
+    "service": "api",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.formatting.provider": "black",
+                "editor.formatOnSave": true
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker",
+                "msjsdiag.vscode-react-native"
+            ]
+        }
+    },
+    "postCreateCommand": "poetry install"
+}

@@ -1,57 +1,21 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-
-# Virtual environments
-.venv/
-venv/
-env/
-
-# PyInstaller
-*.spec
-
-# Unit test / coverage reports
-.pytest_cache/
-htmlcov/
-.coverage
-.coverage.*
-coverage.xml
-
-# FastAPI builds
-dist/
-build/
-
-# Alembic
-alembic.ini.bak
-
-# Logs
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.env
+infra/.env
+.env.*
 *.log
-
-# Editor directories and files
-.vscode/
-.idea/
-
-# Node modules
-node_modules/
-*.expo/
-yarn.lock
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Expo
-.expo/
-.expo-shared/
-
-# Misc
-.DS_Store
-Thumbs.db
 
 # Docker
 *.pid
-.env
-.env.*
+*.sock
+infra/db_data/
 
-# Devcontainer
-.devcontainer/*.log
+# OS / IDE
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

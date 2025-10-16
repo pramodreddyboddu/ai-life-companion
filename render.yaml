@@ -21,9 +21,13 @@ services:
       - key: POSTGRES_DB
         value: ai_companion
       - key: POSTGRES_USER
-        value: dbuser
+        fromDatabase:
+          name: ai-companion-db
+          property: user
       - key: POSTGRES_PASSWORD
-        sync: false           # set in Render dashboard
+        fromDatabase:
+          name: ai-companion-db
+          property: password
       - key: REDIS_URL
         fromService:
           type: redis
@@ -51,9 +55,13 @@ services:
       - key: POSTGRES_DB
         value: ai_companion
       - key: POSTGRES_USER
-        value: dbuser
+        fromDatabase:
+          name: ai-companion-db
+          property: user
       - key: POSTGRES_PASSWORD
-        sync: false
+        fromDatabase:
+          name: ai-companion-db
+          property: password
       - key: REDIS_URL
         fromService:
           type: redis
@@ -69,5 +77,4 @@ databases:
   - name: ai-companion-db
     plan: starter
     databaseName: ai_companion
-    user: dbuser
     ipAllowList: []           # private by default

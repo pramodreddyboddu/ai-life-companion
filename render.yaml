@@ -69,7 +69,7 @@ services:
 
 databases:
   - name: ai-companion-db
-    plan: standard-0
+    plan: starter-small
     databaseName: ai_companion
     user: dbuser
     ipAllowList: []           # private by default

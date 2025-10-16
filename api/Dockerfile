@@ -13,11 +13,12 @@ RUN apt-get update \
     && poetry config virtualenvs.create false \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml poetry.lock* /app/
+COPY api/pyproject.toml /app/pyproject.toml
+COPY api/poetry.lock /app/poetry.lock
 
 RUN poetry install --no-root --no-interaction
 
-COPY . /app
+COPY api /app
 
 EXPOSE 8000
 

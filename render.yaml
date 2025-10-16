@@ -7,7 +7,6 @@ services:
     autoDeploy: true
     healthCheckPath: /health
     dockerfilePath: api/Dockerfile
-    dockerContextPath: api
     envVars:
       - key: APP_ENV
         value: production
@@ -38,7 +37,6 @@ services:
     region: oregon
     autoDeploy: true
     dockerfilePath: api/Dockerfile.worker
-    dockerContextPath: api
     envVars:
       - key: APP_ENV
         value: production

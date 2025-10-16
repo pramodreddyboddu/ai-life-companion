@@ -75,6 +75,6 @@ services:
 
 databases:
   - name: ai-companion-db
-    plan: starter
+    id: dpg-d3oj1pl6ubrc73afssl0
     databaseName: ai_companion
     ipAllowList: []           # private by default

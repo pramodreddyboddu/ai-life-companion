@@ -69,7 +69,7 @@ services:
 
 databases:
   - name: ai-companion-db
-    plan: standard        # modern Render Postgres plan
+    plan: standard-0
     databaseName: ai_companion
     user: dbuser
     ipAllowList: []           # private by default

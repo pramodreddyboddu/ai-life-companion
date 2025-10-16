@@ -1,0 +1,42 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        ports: ['5432:5432']
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ai_companion
+        options: >-
+          --health-cmd="pg_isready -U postgres" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Install Poetry
+        run: pipx install poetry==2.2.1
+      - name: Install deps
+        working-directory: api
+        run: poetry install
+      - name: Alembic upgrade
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_DB: ai_companion
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        working-directory: api
+        run: poetry run alembic upgrade head
+      - name: Run tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # put a dummy like 'test' if you mock calls
+        working-directory: api
+        run: poetry run pytest -q

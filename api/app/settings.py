@@ -1,5 +1,6 @@
 """Application settings loaded from environment variables."""
 
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
@@ -51,6 +52,7 @@ class Settings(BaseSettings):
     encryption_key: Optional[str] = Field(None, alias="ENCRYPTION_KEY")
 
     database: DatabaseSettings = DatabaseSettings()
+    database_url: Optional[str] = Field(None, alias="APP_DATABASE__URL")
     redis: RedisSettings = RedisSettings()
 
     openai_api_key: Optional[str] = Field(None, alias="OPENAI_API_KEY")
@@ -79,6 +81,19 @@ class Settings(BaseSettings):
 
     @model_validator(mode="after")
     def _apply_overrides(self) -> "Settings":
+        env_database_url = self.database_url or os.environ.get("APP_DATABASE__URL")
+        if env_database_url:
+            self.database = DatabaseSettings(
+                url=env_database_url,
+                echo=self.database.echo,
+            )
+            # When DSN is provided, ignore individual overrides below.
+            self.postgres_host = None
+            self.postgres_port = None
+            self.postgres_db = None
+            self.postgres_user = None
+            self.postgres_password = None
+
         if any(
             value is not None
             for value in (
@@ -116,4 +131,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

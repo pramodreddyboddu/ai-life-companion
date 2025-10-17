@@ -295,8 +295,10 @@ class ChatOrchestrator:
 
         try:
             run_ts = parse_user_time_to_utc(run_ts_raw)
-        except ValueError:
-            run_ts = self._parse_datetime(run_ts_raw)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Could not understand the reminder time."
+            ) from exc
         reminder = Reminder(
             user_id=user.id,
             text=text,

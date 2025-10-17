@@ -51,6 +51,7 @@ MEDICAL_FINANCIAL_RESPONSE = (
 
 EMAIL_PATTERN = re.compile(r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}")
 PHONE_PATTERN = re.compile(r"\+?\d[\d\-\s]{6,}\d")
+TOKEN_PATTERN = re.compile(r"sk-[A-Za-z0-9]{10,}")
 
 
 @dataclass

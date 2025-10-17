@@ -25,23 +25,21 @@ def prometheus_metrics(metrics_service: MetricsService = Depends(get_metrics_ser
     counters = snapshot["counters"]
     histogram = snapshot["histogram"]
 
-    lines = []
+    lines: list[str] = []
     lines.append("# TYPE ai_reminder_total counter")
-    lines.append(f"ai_reminder_total{{status="scheduled"}} {counters.get('reminder_scheduled', 0)}")
-    lines.append(f"ai_reminder_total{{status="sent"}} {counters.get('reminder_sent', 0)}")
-    lines.append(f"ai_reminder_total{{status="canceled"}} {counters.get('reminder_canceled', 0)}")
-    lines.append(f"ai_reminder_total{{status="error"}} {counters.get('reminder_error', 0)}")
+    lines.append(f"ai_reminder_total{{status=\"scheduled\"}} {counters.get('reminder_scheduled', 0)}")
+    lines.append(f"ai_reminder_total{{status=\"sent\"}} {counters.get('reminder_sent', 0)}")
+    lines.append(f"ai_reminder_total{{status=\"canceled\"}} {counters.get('reminder_canceled', 0)}")
+    lines.append(f"ai_reminder_total{{status=\"error\"}} {counters.get('reminder_error', 0)}")
 
     lines.append("# TYPE ai_reminder_latency_seconds histogram")
     cumulative = 0
-    for bucket in sorted(histogram.keys()):
-        bucket_value = histogram[bucket]
+    for bucket, bucket_value in sorted(histogram.items()):
         cumulative += bucket_value
         bucket_label = bucket.split(":", 1)[1]
-        lines.append(f"ai_reminder_latency_seconds_bucket{{le="{bucket_label}"}} {cumulative}")
+        lines.append(f"ai_reminder_latency_seconds_bucket{{le=\"{bucket_label}\"}} {cumulative}")
     lines.append(f"ai_reminder_latency_seconds_count {counters.get('reminder_latency_count', 0)}")
     lines.append(f"ai_reminder_latency_seconds_sum {counters.get('reminder_latency_sum', 0)}")
+    lines.append(f"ai_worker_uptime_seconds {counters.get('worker_uptime_seconds', 0)}")
 
-    return Response("
-".join(lines) + "
-", media_type="text/plain; version=0.0.4")
+    return Response("\n".join(lines) + "\n", media_type="text/plain; version=0.0.4")

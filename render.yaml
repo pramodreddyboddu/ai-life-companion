@@ -50,8 +50,7 @@ services:
     plan: starter
     region: oregon
     autoDeploy: true
-    dockerfilePath: api/Dockerfile.worker
-    startCommand: poetry run celery -A app.celery_app beat --loglevel=info
+    dockerfilePath: api/Dockerfile.beat
     envVars:
       - key: APP_ENV
         value: production

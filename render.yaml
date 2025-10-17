@@ -6,8 +6,6 @@ services:
     region: oregon            # or frankfurt/singapore etc.
     autoDeploy: true
     healthCheckPath: /healthz
-    healthCheckTimeout: 30
-    healthCheckInterval: 30
     dockerfilePath: api/Dockerfile
     envVars:
       - key: APP_ENV

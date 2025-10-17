@@ -29,7 +29,8 @@ def parse_user_time_to_utc(text: str, now_local: datetime | None = None) -> date
     else:
         dt = dt.astimezone(LOCAL_TZ)
     if dt < now_local:
-        dt = dt + timedelta(days=1)
+        delta_days = (now_local - dt).days + 1
+        dt = dt + timedelta(days=delta_days)
     return dt.astimezone(UTC)
 
 

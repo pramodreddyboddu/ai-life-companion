@@ -5,7 +5,9 @@ services:
     plan: starter
     region: oregon            # or frankfurt/singapore etc.
     autoDeploy: true
-    healthCheckPath: /health
+    healthCheckPath: /healthz
+    healthCheckTimeout: 30
+    healthCheckInterval: 30
     dockerfilePath: api/Dockerfile
     envVars:
       - key: APP_ENV
@@ -29,6 +31,29 @@ services:
     region: oregon
     autoDeploy: true
     dockerfilePath: api/Dockerfile.worker
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: APP_DATABASE__URL
+        fromDatabase:
+          name: ai-companion-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: ai-companion-redis
+          property: connectionString
+
+  - type: worker
+    name: ai-companion-beat
+    env: docker
+    plan: starter
+    region: oregon
+    autoDeploy: true
+    dockerfilePath: api/Dockerfile.worker
+    startCommand: poetry run celery -A app.celery_app beat --loglevel=info
     envVars:
       - key: APP_ENV
         value: production

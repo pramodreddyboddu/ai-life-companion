@@ -12,6 +12,7 @@ from app.api.dependencies import get_chat_orchestrator
 from app.api.deps import get_db_session, require_api_key
 from app.db.models import ApiKey
 from app.services.chat_orchestrator import ChatOrchestrator, PersonaNotFoundError
+from app.services.rate_limiter import RateLimitExceeded
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -43,6 +44,12 @@ def chat_endpoint(
             message=payload.message,
             persona_key=payload.persona_key,
         )
+    except RateLimitExceeded as exc:
+        retry_after = getattr(exc, "retry_after_seconds", 60)
+        raise HTTPException(
+            status_code=429,
+            detail={"error": "rate_limited", "retry_after_seconds": retry_after},
+        ) from exc
     except PersonaNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

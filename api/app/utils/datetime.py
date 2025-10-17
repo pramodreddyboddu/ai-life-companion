@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from zoneinfo import ZoneInfo
@@ -11,7 +12,13 @@ LOCAL_TZ = ZoneInfo("America/Chicago")
 UTC = ZoneInfo("UTC")
 
 
-def parse_user_time_to_utc(text: str, now_local: datetime | None = None) -> datetime:
+@dataclass(frozen=True)
+class ParsedUserTime:
+    local: datetime
+    utc: datetime
+
+
+def parse_user_time(text: str, now_local: datetime | None = None) -> ParsedUserTime:
     now_local = now_local or datetime.now(LOCAL_TZ)
 
     dt = dateparser.parse(
@@ -31,7 +38,11 @@ def parse_user_time_to_utc(text: str, now_local: datetime | None = None) -> date
     if dt < now_local:
         delta_days = (now_local - dt).days + 1
         dt = dt + timedelta(days=delta_days)
-    return dt.astimezone(UTC)
+    return ParsedUserTime(local=dt, utc=dt.astimezone(UTC))
 
 
-__all__ = ["parse_user_time_to_utc", "LOCAL_TZ", "UTC"]
+def parse_user_time_to_utc(text: str, now_local: datetime | None = None) -> datetime:
+    return parse_user_time(text, now_local=now_local).utc
+
+
+__all__ = ["parse_user_time_to_utc", "parse_user_time", "ParsedUserTime", "LOCAL_TZ", "UTC"]

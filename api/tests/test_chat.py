@@ -15,7 +15,7 @@ from app.security.api_keys import get_key_prefix, hash_api_key
 from app.services.chat_orchestrator import ChatOrchestrator, DEFAULT_PERSONAS
 from app.services.embedding_service import EmbeddingService
 from app.services.memory_service import MemoryService
-from app.services.safety import SafetyResult
+from app.services.safety import SafetyResult, redact_pii
 from app.services.metrics_service import MetricsService
 
 
@@ -304,8 +304,13 @@ def test_log_redaction(monkeypatch):
     monkeypatch.setattr(chat_module.logger, "info", fake_info)
 
     user = User(id=uuid.uuid4(), email="log@example.com", plan=PlanEnum.FREE)
-    orchestrator._log_user_message(user, "Contact me at test@example.com or +1 212-555-7890")
+    orchestrator._log_user_message(
+        user, "Contact me at test@example.com or +1 212-555-7890 with token sk-ABCDEF123456"
+    )
 
     assert captured
     assert "[REDACTED_EMAIL]" in captured[0]
     assert "[REDACTED_PHONE]" in captured[0]
+    assert "[REDACTED_TOKEN]" in captured[0]
+
+    assert redact_pii("sk-ABCDEF123456") == "[REDACTED_TOKEN]"

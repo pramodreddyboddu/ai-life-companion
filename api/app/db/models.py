@@ -39,7 +39,8 @@ class TaskStatusEnum(str, Enum):
 class ReminderStatusEnum(str, Enum):
     SCHEDULED = "scheduled"
     SENT = "sent"
-    FAILED = "failed"
+    CANCELED = "canceled"
+    ERROR = "error"
 
 
 class ApiKeyStatusEnum(str, Enum):
@@ -90,6 +91,19 @@ class User(Base):
     sessions: Mapped[List["Session"]] = relationship(back_populates="user", cascade="all, delete-orphan")
     api_keys: Mapped[List["ApiKey"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
+
+
+class FeatureFlag(Base):
+    """Runtime feature toggle."""
+
+    __tablename__ = "feature_flags"
+
+    key: Mapped[str] = mapped_column(sa.String(64), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(sa.Boolean, nullable=False, server_default=sa.text("false"))
+    description: Mapped[Optional[str]] = mapped_column(sa.String(255))
+    updated_at: Mapped[sa.DateTime] = mapped_column(
+        sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now(), onupdate=sa.func.now()
+    )
 
 class Memory(Base):
     """Structured memory derived from user interactions."""
@@ -150,11 +164,16 @@ class Reminder(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(UUID_PK, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     text: Mapped[str] = mapped_column(sa.Text, nullable=False)
     run_ts: Mapped[sa.DateTime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    original_phrase: Mapped[Optional[str]] = mapped_column(sa.Text)
+    local_ts: Mapped[sa.DateTime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    utc_ts: Mapped[sa.DateTime] = mapped_column(sa.DateTime(timezone=True), nullable=False)
+    correlation_id: Mapped[str] = mapped_column(sa.String(64), nullable=False)
     status: Mapped[ReminderStatusEnum] = mapped_column(
         reminder_status_enum, nullable=False, server_default=ReminderStatusEnum.SCHEDULED.value
     )
     last_attempt_at: Mapped[Optional[sa.DateTime]] = mapped_column(sa.DateTime(timezone=True))
     sent_at: Mapped[Optional[sa.DateTime]] = mapped_column(sa.DateTime(timezone=True))
+    calendar_event_id: Mapped[Optional[str]] = mapped_column(sa.String(128))
 
     user: Mapped["User"] = relationship(back_populates="reminders")
 

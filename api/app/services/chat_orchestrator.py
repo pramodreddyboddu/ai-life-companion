@@ -24,13 +24,14 @@ from app.db.models import (
     User,
     PlanEnum,
 )
+from app.logging import ensure_correlation_id, log_reminder_event
 from app.services.calendar_service import CalendarService
 from app.services.embedding_service import EmbeddingService
 from app.services.memory_service import MemoryService
 from app.services.metrics_service import MetricsService
 from app.services.rate_limiter import RateLimitExceeded, RateLimiter
 from app.services.safety import SafetyService, redact_pii
-from app.utils.datetime import parse_user_time_to_utc
+from app.utils.datetime import parse_user_time
 
 
 DEFAULT_PERSONAS: Dict[str, Dict[str, str]] = {
@@ -283,9 +284,9 @@ class ChatOrchestrator:
                 session.query(func.count(Reminder.id))
                 .filter(
                     Reminder.user_id == user.id,
-                    Reminder.run_ts >= start_of_day,
-                    Reminder.run_ts < end_of_day,
-                    Reminder.status != ReminderStatusEnum.FAILED,
+                    Reminder.utc_ts >= start_of_day,
+                    Reminder.utc_ts < end_of_day,
+                    Reminder.status == ReminderStatusEnum.SCHEDULED,
                 )
                 .scalar()
                 or 0
@@ -294,23 +295,37 @@ class ChatOrchestrator:
                 raise HTTPException(status_code=402, detail="Upgrade to Pro to schedule more reminders today.")
 
         try:
-            run_ts = parse_user_time_to_utc(run_ts_raw)
+            parsed_time = parse_user_time(run_ts_raw)
         except ValueError as exc:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Could not understand the reminder time."
             ) from exc
+        correlation_id = ensure_correlation_id()
         reminder = Reminder(
             user_id=user.id,
             text=text,
-            run_ts=run_ts,
+            run_ts=parsed_time.utc,
+            original_phrase=run_ts_raw,
+            local_ts=parsed_time.local,
+            utc_ts=parsed_time.utc,
+            status=ReminderStatusEnum.SCHEDULED,
+            correlation_id=correlation_id,
         )
         session.add(reminder)
         session.flush()
+        self._metrics.increment_counter("reminder_scheduled")
+        log_reminder_event(
+            "reminder_scheduled",
+            user_id=user.id,
+            reminder_id=reminder.id,
+            eta_utc=reminder.utc_ts,
+            status=reminder.status.value,
+        )
         self._metrics.track(
             "reminder_created",
             user_id=user.id,
             properties={
-                "run_ts": reminder.run_ts.isoformat(),
+                "run_ts": reminder.utc_ts.isoformat() if reminder.utc_ts else reminder.run_ts.isoformat(),
                 "source": "chat_tool",
             },
         )

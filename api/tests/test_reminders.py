@@ -5,6 +5,7 @@ from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 import pytest
+from zoneinfo import ZoneInfo
 
 from app.db.models import PlanEnum, Reminder, ReminderStatusEnum, User
 from app.settings import settings
@@ -17,11 +18,16 @@ def test_schedule_and_deliver_reminder_triggers_notifications(db_session, monkey
     user = User(id=uuid.uuid4(), email="reminder@example.com", plan=PlanEnum.FREE, push_token="ExpoPushToken[test]")
     db_session.add(user)
 
+    run_ts = now + timedelta(minutes=2)
     reminder = Reminder(
         id=uuid.uuid4(),
         user_id=user.id,
         text="Drink a glass of water.",
-        run_ts=now + timedelta(minutes=2),
+        run_ts=run_ts,
+        original_phrase="in 2 minutes",
+        local_ts=run_ts.astimezone(ZoneInfo("America/Chicago")),
+        utc_ts=run_ts,
+        correlation_id=str(uuid.uuid4()),
     )
     db_session.add(reminder)
     db_session.flush()

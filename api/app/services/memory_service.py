@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import List, Optional
 import uuid
@@ -12,6 +13,15 @@ from sqlalchemy.orm import Session
 
 from app.db.models import Memory, MemoryTypeEnum, PlanEnum, User
 from app.services.embedding_service import EmbeddingService, cosine_similarity
+
+
+@dataclass
+class MemoryMatch:
+    """Search match with associated scoring information."""
+
+    memory: Memory
+    score: float
+    similarity: float
 
 
 class MemoryService:
@@ -50,15 +60,15 @@ class MemoryService:
         session.flush()
         return memory
 
-    def search_memories(
+    def search_memory_matches(
         self,
         session: Session,
         *,
         user_id: uuid.UUID,
         query: str,
         top_k: int = 8,
-    ) -> List[Memory]:
-        """Return the most relevant memories for the requested query."""
+    ) -> List[MemoryMatch]:
+        """Return scored semantic memory matches for the given query."""
 
         if not query.strip():
             return []
@@ -69,7 +79,7 @@ class MemoryService:
         memories = session.execute(stmt).scalars().all()
 
         now = datetime.now(timezone.utc)
-        scored: List[tuple[float, Memory]] = []
+        matches: List[MemoryMatch] = []
 
         for memory in memories:
             memory_embedding = list(memory.embedding) if memory.embedding is not None else []
@@ -82,7 +92,19 @@ class MemoryService:
             recency_boost = 0.1 / (1.0 + (age_seconds / 86400.0))
 
             score = similarity + recency_boost
-            scored.append((score, memory))
+            matches.append(MemoryMatch(memory=memory, score=score, similarity=similarity))
 
-        scored.sort(key=lambda item: item[0], reverse=True)
-        return [memory for _, memory in scored[:top_k]]
+        matches.sort(key=lambda item: item.score, reverse=True)
+        return matches[:top_k]
+
+    def search_memories(
+        self,
+        session: Session,
+        *,
+        user_id: uuid.UUID,
+        query: str,
+        top_k: int = 8,
+    ) -> List[Memory]:
+        """Return the most relevant memories for the requested query."""
+
+        return [match.memory for match in self.search_memory_matches(session, user_id=user_id, query=query, top_k=top_k)]

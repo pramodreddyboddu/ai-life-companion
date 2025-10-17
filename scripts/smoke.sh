@@ -25,6 +25,9 @@ for _ in {1..30}; do
   sleep 2
 done
 
+echo "[smoke] Checking /healthz..."
+$COMPOSE exec api curl -sf http://localhost:8000/healthz >/dev/null
+
 echo "[smoke] Running unit tests..."
 $COMPOSE run --rm api poetry run pytest
 
@@ -36,5 +39,8 @@ $COMPOSE exec api python -m app.scripts.seed
 
 echo "[smoke] Executing mocked chat flow..."
 $COMPOSE exec api python -m app.scripts.mock_chat
+
+echo "[smoke] Fetching metrics snapshot..."
+$COMPOSE exec api curl -sf http://localhost:8000/metrics/basic || true
 
 echo "[smoke] Smoke test completed successfully."

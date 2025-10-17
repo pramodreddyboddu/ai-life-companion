@@ -1,14 +1,14 @@
-"""Simple per-user rate limiter backed by Redis."""
+"""Simple per-user/API-key rate limiter backed by Redis."""
 
 from __future__ import annotations
 
-from datetime import timedelta
+from dataclasses import dataclass
 from typing import Protocol
 import uuid
 
 
 class SupportsRedis(Protocol):
-    """Duck-typed subset of Redis client methods used by the limiter."""
+    """Subset of Redis methods used by the limiter."""
 
     def incr(self, name: str) -> int: ...
 
@@ -18,27 +18,53 @@ class SupportsRedis(Protocol):
 class RateLimitExceeded(Exception):
     """Raised when a caller exceeds the configured rate limit."""
 
+    def __init__(self, message: str, retry_after_seconds: int) -> None:
+        super().__init__(message)
+        self.retry_after_seconds = retry_after_seconds
+
+
+@dataclass(frozen=True)
+class RateLimitConfig:
+    burst_limit: int
+    burst_window_seconds: int
+    sustained_limit: int
+    sustained_window_seconds: int
+
 
 class RateLimiter:
-    """Track request counts per user within a fixed window."""
+    """Track request counts within burst and sustained windows."""
 
-    def __init__(self, redis_client: SupportsRedis, *, limit: int, window_seconds: int) -> None:
+    def __init__(self, redis_client: SupportsRedis, config: RateLimitConfig) -> None:
         self._redis = redis_client
-        self._limit = limit
-        self._window_seconds = window_seconds
+        self._config = config
 
-    @property
-    def window(self) -> timedelta:
-        return timedelta(seconds=self._window_seconds)
+    def _check_window(self, key: str, limit: int, window_seconds: int) -> int:
+        current = self._redis.incr(key)
+        if current == 1:
+            self._redis.expire(key, window_seconds)
+        return current
 
-    def check(self, user_id: uuid.UUID) -> None:
-        """Increment the user's counter and raise if the limit is exceeded."""
+    def check(self, identifier: uuid.UUID | str) -> None:
+        """Increment counters for the identifier and raise when limits are exceeded."""
 
-        key = f"rate-limit:chat:{user_id}"
-        current_count = self._redis.incr(key)
+        identifier_str = str(identifier)
+        burst_key = f"rate-limit:chat:burst:{identifier_str}"
+        sustained_key = f"rate-limit:chat:sustained:{identifier_str}"
 
-        if current_count == 1:
-            self._redis.expire(key, self._window_seconds)
+        burst_count = self._check_window(
+            burst_key, self._config.burst_limit, self._config.burst_window_seconds
+        )
+        if burst_count > self._config.burst_limit:
+            raise RateLimitExceeded(
+                "Burst rate limit exceeded.",
+                retry_after_seconds=self._config.burst_window_seconds,
+            )
 
-        if current_count > self._limit:
-            raise RateLimitExceeded(f"Rate limit exceeded for user {user_id}")
+        sustained_count = self._check_window(
+            sustained_key, self._config.sustained_limit, self._config.sustained_window_seconds
+        )
+        if sustained_count > self._config.sustained_limit:
+            raise RateLimitExceeded(
+                "Hourly rate limit exceeded.",
+                retry_after_seconds=self._config.sustained_window_seconds,
+            )

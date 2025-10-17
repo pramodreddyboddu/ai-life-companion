@@ -90,6 +90,7 @@ def redact_pii(value: str) -> str:
 
     redacted = EMAIL_PATTERN.sub("[REDACTED_EMAIL]", value)
     redacted = PHONE_PATTERN.sub("[REDACTED_PHONE]", redacted)
+    redacted = TOKEN_PATTERN.sub("[REDACTED_TOKEN]", redacted)
     return redacted
 
 

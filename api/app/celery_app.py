@@ -5,7 +5,10 @@ from __future__ import annotations
 from celery import Celery
 from celery.schedules import crontab
 
+from app.logging import configure_logging
 from app.settings import settings
+
+configure_logging()
 
 
 celery_app = Celery(

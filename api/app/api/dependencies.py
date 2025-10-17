@@ -10,9 +10,10 @@ from redis import Redis
 from app.services.calendar_service import CalendarService
 from app.services.chat_orchestrator import ChatOrchestrator
 from app.services.embedding_service import EmbeddingService
+from app.services.feature_flags import FeatureFlagService
 from app.services.memory_service import MemoryService
 from app.services.metrics_service import MetricsService
-from app.services.rate_limiter import RateLimiter
+from app.services.rate_limiter import RateLimitConfig, RateLimiter
 from app.services.safety import SafetyService
 from app.settings import settings
 
@@ -63,12 +64,27 @@ def _openai_client() -> OpenAI:
 @lru_cache(maxsize=1)
 def _rate_limiter() -> RateLimiter:
     redis_client = Redis.from_url(settings.redis.url, decode_responses=True)
-    return RateLimiter(redis_client, limit=20, window_seconds=60)
+    config = RateLimitConfig(
+        burst_limit=10,
+        burst_window_seconds=60,
+        sustained_limit=60,
+        sustained_window_seconds=3600,
+    )
+    return RateLimiter(redis_client, config)
 
 
 def get_rate_limiter() -> RateLimiter:
     return _rate_limiter()
 
+
+
+@lru_cache(maxsize=1)
+def _feature_flag_service() -> FeatureFlagService:
+    return FeatureFlagService()
+
+
+def get_feature_flag_service() -> FeatureFlagService:
+    return _feature_flag_service()
 
 @lru_cache(maxsize=1)
 def _metrics_service() -> MetricsService:

@@ -31,12 +31,30 @@ google-auth-oauthlib = "^1.2.0"
 google-api-python-client = "^2.129.0"
 dateparser = "^1.2.0"
 python-multipart = "^0.0.20"
+gtts = "^2.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 pytest-asyncio = "^0.24.0"
 ruff = "^0.6.9"
+black = "^24.8.0"
 
 [build-system]
 requires = ["poetry-core>=1.6.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+pythonpath = ["."]
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-select = ["B", "E", "F", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/api/routers/**" = ["B008"]

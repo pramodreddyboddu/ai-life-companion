@@ -1,12 +1,14 @@
 """Application settings loaded from environment variables."""
 
 import os
+import sys
 from functools import lru_cache
 from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, model_validator
+from loguru import logger
+from pydantic import BaseModel, Field, ValidationError, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -50,6 +52,7 @@ class Settings(BaseSettings):
     api_key: Optional[str] = Field(None, alias="APP_API_KEY")
     secret_key: str = Field("change_me", alias="SECRET_KEY")
     encryption_key: Optional[str] = Field(None, alias="ENCRYPTION_KEY")
+    admin_api_key: Optional[str] = Field(None, alias="ADMIN_API_KEY")
 
     database: DatabaseSettings = DatabaseSettings()
     database_url: Optional[str] = Field(None, alias="APP_DATABASE__URL")
@@ -127,7 +130,68 @@ class Settings(BaseSettings):
 def get_settings() -> Settings:
     """Return a cached Settings instance."""
 
-    return Settings()
+    try:
+        settings_obj = Settings()
+    except ValidationError as exc:
+        logger.error(
+            "configuration_validation_failed",
+            error="validation_error",
+            details=exc.errors(),
+        )
+        sys.exit(1)
+
+    missing = _collect_missing_env(settings_obj)
+    if missing:
+        logger.error(
+            "configuration_validation_failed",
+            error="missing_environment",
+            missing_envs=missing,
+        )
+        sys.exit(1)
+
+    if settings_obj.secret_key == "change_me":
+        logger.error(
+            "configuration_validation_failed",
+            error="insecure_secret_key",
+            message="SECRET_KEY must be set to a non-default value.",
+        )
+        sys.exit(1)
+
+    return settings_obj
+
+
+def _collect_missing_env(settings_obj: Settings) -> list[str]:
+    missing: list[str] = []
+
+    db_env_present = bool(
+        os.environ.get("APP_DATABASE__URL")
+        or os.environ.get("DATABASE_URL")
+        or all(
+            os.environ.get(name)
+            for name in ("POSTGRES_HOST", "POSTGRES_DB", "POSTGRES_USER", "POSTGRES_PASSWORD")
+        )
+    )
+    if not db_env_present or not settings_obj.database.url:
+        missing.append("APP_DATABASE__URL or POSTGRES_*")
+
+    redis_env_present = bool(os.environ.get("APP_REDIS__URL") or os.environ.get("REDIS_URL"))
+    if not redis_env_present or not settings_obj.redis.url:
+        missing.append("APP_REDIS__URL or REDIS_URL")
+
+    if not os.environ.get("OPENAI_API_KEY"):
+        missing.append("OPENAI_API_KEY")
+
+    if not os.environ.get("ENCRYPTION_KEY"):
+        missing.append("ENCRYPTION_KEY")
+
+    if not os.environ.get("TZ"):
+        missing.append("TZ")
+
+    if settings_obj.admin_api_key and os.environ.get("ADMIN_API_KEY") != settings_obj.admin_api_key:
+        missing.append("ADMIN_API_KEY")
+
+    return missing
 
 
 settings = get_settings()
+

@@ -1,13 +1,15 @@
-import Constants from "expo-constants";
+import { DEFAULT_API_BASE_URL, useAppStore } from "../store/useAppStore";
 
-import { useAppStore } from "../store/useAppStore";
+export const getApiBaseUrl = () => {
+  const { apiBaseUrl } = useAppStore.getState();
+  return apiBaseUrl || DEFAULT_API_BASE_URL;
+};
 
-const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_BASE_URL ??
-  (Constants.expoConfig?.extra as { apiBaseUrl?: string } | undefined)?.apiBaseUrl ??
-  "http://localhost:8000";
-
-export const getApiBaseUrl = () => API_BASE_URL;
+function buildUrl(path: string): string {
+  const base = getApiBaseUrl().replace(/\/+$/, "");
+  const normalisedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${normalisedPath}`;
+}
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const { apiKey } = useAppStore.getState();
@@ -22,13 +24,25 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(buildUrl(path), {
     ...options,
     headers
   });
 
   if (!response.ok) {
-    const message = await response.text();
+    const contentType = response.headers.get("content-type") || "";
+    let message: string | undefined;
+    if (contentType.includes("application/json")) {
+      try {
+        const data = await response.json();
+        message = data?.detail ?? data?.message;
+      } catch (error) {
+        message = undefined;
+      }
+    }
+    if (!message) {
+      message = await response.text();
+    }
     throw new Error(message || `Request failed with status ${response.status}`);
   }
 

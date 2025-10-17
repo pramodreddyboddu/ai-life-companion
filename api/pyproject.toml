@@ -31,7 +31,7 @@ google-auth-oauthlib = "^1.2.0"
 google-api-python-client = "^2.129.0"
 dateparser = "^1.2.0"
 python-multipart = "^0.0.20"
-gtts = "^2.6.0"
+gTTS = "^2.5.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"

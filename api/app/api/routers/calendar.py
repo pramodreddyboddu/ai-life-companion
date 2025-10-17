@@ -44,9 +44,8 @@ def add_calendar_event(
     session: Session = Depends(get_db_session),
     calendar: CalendarService = Depends(get_calendar_service),
     feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
-    feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
 ) -> CalendarAddResponse:
-        if not feature_flags.is_enabled("calendar_integration", session=session):
+    if not feature_flags.is_enabled("calendar_integration", session=session):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Calendar integration disabled.")
 
     reminder = session.get(Reminder, payload.reminder_id)
@@ -64,7 +63,7 @@ def add_calendar_event(
     description = payload.description
     end_ts = start_ts + timedelta(minutes=payload.duration_minutes)
 
-        user = reminder.user or session.get(User, reminder.user_id)
+    user = reminder.user or session.get(User, reminder.user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
@@ -82,24 +81,21 @@ def add_calendar_event(
 @router.get("/list")
 def list_calendar_events(
     *,
-    date: Optional[str] = Query(default=None, description="ISO date (YYYY-MM-DD) in local timezone"),
+    date_str: Optional[str] = Query(default=None, description="ISO date (YYYY-MM-DD) in local timezone"),
     limit: int = Query(default=10, ge=1, le=50),
     api_key: ApiKey = Depends(require_api_key),
     session: Session = Depends(get_db_session),
     calendar: CalendarService = Depends(get_calendar_service),
     feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
-    feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
 ) -> List[Dict[str, Any]]:
-        if not feature_flags.is_enabled("calendar_integration", session=session):
+    if not feature_flags.is_enabled("calendar_integration", session=session):
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Calendar integration disabled.")
 
     user = session.get(User, api_key.user_id)
     if user is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
-    if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
 
-        target_date = _parse_date(date_str) if date_str else datetime.now(DEFAULT_TZ).date()
+    target_date = _parse_date(date_str) if date_str else datetime.now(DEFAULT_TZ).date()
     start = datetime.combine(target_date, datetime.min.time(), tzinfo=DEFAULT_TZ)
     end = start + timedelta(days=1)
 
@@ -107,8 +103,8 @@ def list_calendar_events(
     return events
 
 
-def _parse_date(value: str) -> datetime.date:
+def _parse_date(value: str) -> date:
     try:
-        return datetime.fromisoformat(value).date()
+        return date.fromisoformat(value)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format.") from exc
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date format (expected YYYY-MM-DD).") from exc

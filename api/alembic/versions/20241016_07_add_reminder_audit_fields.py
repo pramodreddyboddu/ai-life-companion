@@ -7,8 +7,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = "20241016_07_add_reminder_audit_fields"
-down_revision = "20241015_06_add_metrics_tables"
+revision = "20241016_07"
+down_revision = "20241015_06"
 branch_labels = None
 depends_on = None
 

@@ -6,8 +6,8 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision = "20241016_09_add_reminder_calendar_event"
-down_revision = "20241016_08_add_memory_index"
+revision = "20241016_09"
+down_revision = "20241016_08"
 branch_labels = None
 depends_on = None
 

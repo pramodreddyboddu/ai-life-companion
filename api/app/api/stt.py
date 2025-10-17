@@ -36,16 +36,12 @@ async def speech_to_text(
     session: Session = Depends(get_db_session),
     metrics: MetricsService = Depends(get_metrics_service),
     feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
-    feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
 ) -> dict:
     if not feature_flags.is_enabled("voice_mode", session=session):
         raise HTTPException(status_code=503, detail="Voice mode is disabled.")
 
     if not settings.openai_api_key:
         raise HTTPException(status_code=503, detail="Speech-to-text is not configured.")
-
-    if not feature_flags.is_enabled("voice_mode", session=session):
-        raise HTTPException(status_code=503, detail="Voice mode is disabled.")
 
     user = session.get(User, api_key.user_id)
     if user is None:
@@ -109,7 +105,6 @@ def text_to_speech(
     api_key=Depends(require_api_key),
     session: Session = Depends(get_db_session),
     metrics: MetricsService = Depends(get_metrics_service),
-    feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
     feature_flags: FeatureFlagService = Depends(get_feature_flag_service),
 ) -> StreamingResponse:
     if not feature_flags.is_enabled("voice_mode", session=session):
